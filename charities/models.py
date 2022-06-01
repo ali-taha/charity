@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.forms import ChoiceField
-
+from django.db.models import Q
 User = get_user_model()
 
 CHOICE_EXPERIENCE = [
@@ -33,6 +32,16 @@ STATE_CHOICES = [
     ('D','Done'),
 ]
 
+class TaskManager(models.Manager):
+    def related_tasks_to_charity(self, user):
+        return self.filter(charity=user.charity)
+
+    def related_tasks_to_benefactor(self, user):
+        return self.filter(assigned_benefactor=user.benefactor)
+
+    def all_related_tasks_to_user(self, user):
+        return  self.filter(Q(assigned_benefactor=user.benefactor)|Q(charity=user.charity)|Q(state='P'))
+
 
 class Task(models.Model):
     assigned_benefactor = models.ForeignKey(Benefactor, null=True, on_delete=models.SET_NULL)
@@ -44,3 +53,7 @@ class Task(models.Model):
     gender_limit = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
     state = models.CharField(max_length=1, choices=STATE_CHOICES, default='P')
     title = models.CharField(max_length=60)
+    objects = TaskManager()
+
+
+
