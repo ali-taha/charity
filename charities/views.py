@@ -3,6 +3,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView
 
 from accounts.permissions import IsCharityOwner, IsBenefactor
 from charities.models import Task
@@ -11,13 +12,24 @@ from charities.serializers import (
 )
 
 
-class BenefactorRegistration(APIView):
-    pass
+class BenefactorRegistration(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BenefactorSerializer
+
+    def get_serializer_context(self):
+        context = super(BenefactorRegistration, self).get_serializer_context()
+        context.update({"request": self.request})
+        return context
 
 
-class CharityRegistration(APIView):
-    pass
+class CharityRegistration(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CharitySerializer
 
+    def get_serializer_context(self):
+        context = super(CharityRegistration, self).get_serializer_context()
+        context.update({"request": self.request})
+        return context
 
 class Tasks(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
