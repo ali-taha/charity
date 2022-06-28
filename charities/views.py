@@ -1,3 +1,5 @@
+from email.policy import HTTP
+from webbrowser import get
 from rest_framework import status, generics
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
@@ -88,7 +90,23 @@ class TaskRequest(APIView):
 
 
 class TaskResponse(APIView):
-    pass
+    permission_classes = [IsCharityOwner]
+
+    def post(self, request, task_id):
+
+        task = get_object_or_404(Task, id = task_id)
+        user_response = request.data.get("response")
+        if user_response not in ["A", "R"]:
+            return Response(data={'detail': 'Required field ("A" for accepted / "R" for rejected)'}, status=status.HTTP_400_BAD_REQUEST)
+        elif task.state != "W":
+            return Response(data={'detail': 'This task is not waiting.'}, status=status.HTTP_404_NOT_FOUND)
+        elif user_response == "A":
+            task._accept_benefactor()
+            return Response(data={'detail': 'Response sent.'}, status=status.HTTP_200_OK)
+        elif user_response == "R":
+            task._reject_benefactor()
+            return Response(data={'detail': 'Response sent.'}, status=status.HTTP_200_OK)
+
 
 
 class DoneTask(APIView):
