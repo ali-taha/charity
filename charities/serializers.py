@@ -1,5 +1,3 @@
-from dataclasses import fields
-from pyexpat import model
 from rest_framework import serializers
 
 from .models import Benefactor
@@ -7,21 +5,24 @@ from .models import Charity, Task
 
 
 class BenefactorSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Benefactor
-        fields = ["experience","free_time_per_week",]
+        fields = (
+            'user',
+            'experience',
+            'free_time_per_week',
+        )
 
-    def create(self, validated_data):
-            benefactor = Benefactor(
-                experience=validated_data["experience"],
-                free_time_per_week=validated_data["free_time_per_week"],
-        
-            )
-            user = self.context['request'].user
-            benefactor.user = user
-            benefactor.save()
-            return benefactor
-        
+    def save(self, **kwargs):
+        """
+        kwargs should contain `user` object
+        it should be evaluated from AuthToken
+        """
+        user = kwargs.get('user')
+        assert user is not None, "`user` is None"
+        return super().save(user=user)
 
 
 class CharitySerializer(serializers.ModelSerializer):
@@ -39,7 +40,6 @@ class CharitySerializer(serializers.ModelSerializer):
             charity.user = user
             charity.save()
             return charity
-
 
 
 class TaskSerializer(serializers.ModelSerializer):

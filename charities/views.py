@@ -12,14 +12,14 @@ from charities.serializers import (
 )
 
 
-class BenefactorRegistration(CreateAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = BenefactorSerializer
+class BenefactorRegistration(APIView):
+    permission_classes = (IsAuthenticated,)
 
-    def get_serializer_context(self):
-        context = super(BenefactorRegistration, self).get_serializer_context()
-        context.update({"request": self.request})
-        return context
+    def post(self, request):
+        serializer = BenefactorSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CharityRegistration(CreateAPIView):
@@ -30,6 +30,7 @@ class CharityRegistration(CreateAPIView):
         context = super(CharityRegistration, self).get_serializer_context()
         context.update({"request": self.request})
         return context
+
 
 class Tasks(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
